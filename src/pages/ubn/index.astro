@@ -1,0 +1,187 @@
+---
+import Base from '../../layouts/Base.astro';
+---
+<Base
+  title="統一編號驗證與生成"
+  description="台灣統一編號（統編）驗證與生成工具：輸入 8 碼立即檢查是否符合規則並說明原因，也能產生測試用統編。資料只在瀏覽器處理。"
+  path="/ubn/"
+>
+  <p class="crumb"><a href="/">首頁</a> › 統一編號</p>
+  <h1 class="page-title">統一編號驗證與生成</h1>
+  <p class="page-sub">驗證 8 碼統一編號是否正確，或產生測試用統編。</p>
+
+  <div class="tabs" role="tablist" aria-label="功能">
+    <button class="tab" role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="true">驗證</button>
+    <button class="tab" role="tab" id="tab-gen" aria-controls="panel-gen" aria-selected="false" tabindex="-1">生成</button>
+  </div>
+
+  <section class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify">
+    <form id="verify-form" novalidate>
+      <label class="label" for="ubn">統一編號</label>
+      <input class="code-input" id="ubn" name="ubn" inputmode="numeric" autocomplete="off" placeholder="12345678" aria-describedby="ubn-hint" />
+      <p class="hint" id="ubn-hint">可直接貼上，空白會自動忽略。</p>
+      <button class="btn" type="submit">驗證</button>
+    </form>
+    <div class="slip-slot" id="slot" aria-live="polite">
+      <p class="slip-empty">輸入統一編號後，結果會印在這裡。</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-gen" role="tabpanel" aria-labelledby="tab-gen" hidden>
+    <div class="count-row">
+      <div>
+        <label class="label" for="count">數量</label>
+        <input class="code-input count" id="count" type="number" min="1" max="10" value="1" inputmode="numeric" />
+      </div>
+      <button class="btn" id="gen-btn" type="button">生成</button>
+    </div>
+    <p class="hint">產生符合檢查規則的統編，僅供測試，不代表真實存在的公司。一次最多 10 筆。</p>
+    <ul class="gen-list" id="gen-list" hidden></ul>
+    <div class="gen-foot" id="gen-foot" hidden>
+      <span>每一筆都通過驗證</span>
+      <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
+    </div>
+  </section>
+  <div class="toast" id="toast" role="status" hidden>已複製</div>
+</Base>
+
+<script>
+  import { FAILURE_MESSAGE, generateUbns, validateUbn } from '../../lib/ubn';
+
+  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+
+  // 分頁
+  const tabs = [$('tab-verify'), $('tab-gen')];
+  const panels = [$('panel-verify'), $('panel-gen')];
+  function selectTab(i: number) {
+    tabs.forEach((t, j) => {
+      t.setAttribute('aria-selected', String(i === j));
+      t.tabIndex = i === j ? 0 : -1;
+      panels[j]!.hidden = i !== j;
+    });
+  }
+  tabs.forEach((t, i) => {
+    t.addEventListener('click', () => selectTab(i));
+    t.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        const n = (i + 1) % tabs.length;
+        selectTab(n);
+        tabs[n]!.focus();
+      }
+    });
+  });
+
+  // 複製
+  let toastTimer: number | undefined;
+  async function copy(text: string) {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch {
+      const ta = document.createElement('textarea');
+      ta.value = text;
+      document.body.append(ta);
+      ta.select();
+      document.execCommand('copy');
+      ta.remove();
+    }
+    const toast = $('toast');
+    toast.hidden = false;
+    clearTimeout(toastTimer);
+    toastTimer = window.setTimeout(() => (toast.hidden = true), 1600);
+  }
+
+  function el(tag: string, cls?: string, text?: string) {
+    const e = document.createElement(tag);
+    if (cls) e.className = cls;
+    if (text !== undefined) e.textContent = text;
+    return e;
+  }
+  function row(dt: string, dd: string) {
+    const r = el('div', 'slip__row');
+    r.append(el('dt', undefined, dt), el('dd', undefined, dd));
+    return r;
+  }
+
+  // 驗證
+  const input = $<HTMLInputElement>('ubn');
+  const slot = $('slot');
+
+  function render() {
+    const r = validateUbn(input.value);
+    const slip = el('div', r.ok ? 'slip' : 'slip slip--fail');
+    slip.append(el('p', 'slip__title', '驗證證明聯'), el('hr'));
+    slip.append(el('p', 'slip__code', r.normalized || '--------'), el('hr'));
+
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('檢查規則', '加權檢查'), row('位數', String(r.normalized.length)));
+    if (r.sum !== undefined) rows.append(row('加權總和', String(r.sum)));
+    slip.append(rows, el('hr'));
+
+    slip.append(el('p', 'slip__verdict', r.ok ? '格式正確' : '不通過'));
+    if (!r.ok && r.failure) slip.append(el('p', 'slip__reason', FAILURE_MESSAGE[r.failure]));
+
+    if (r.steps) {
+      const d = el('details');
+      d.append(el('summary', undefined, '計算過程'));
+      const t = el('table');
+      const head = el('tr');
+      for (const h of ['位', '數字', '權重', '積的位數和']) head.append(el('th', undefined, h));
+      t.append(head);
+      r.steps.forEach((s, i) => {
+        const tr = el('tr');
+        for (const v of [i + 1, s.digit, s.weight, s.value]) tr.append(el('td', undefined, String(v)));
+        t.append(tr);
+      });
+      d.append(t);
+      slip.append(d);
+    }
+
+    if (r.ok) slip.append(el('p', 'slip__note', '格式正確不代表公司真實存在，也不是查核公司登記。'));
+
+    const actions = el('div', 'slip__actions');
+    const btn = el('button', 'btn btn--ghost', '複製結果') as HTMLButtonElement;
+    btn.type = 'button';
+    btn.addEventListener('click', () =>
+      copy(`統一編號 ${r.normalized}:${r.ok ? '格式正確' : '不通過（' + FAILURE_MESSAGE[r.failure!] + '）'}`),
+    );
+    actions.append(btn);
+    slip.append(actions);
+    slot.replaceChildren(slip);
+  }
+
+  $('verify-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (input.value.trim() === '') {
+      slot.replaceChildren(el('p', 'slip-empty', FAILURE_MESSAGE.empty));
+      return;
+    }
+    render();
+  });
+  // 輸入到第 8 碼時自動驗證，之前不打擾
+  input.addEventListener('input', () => {
+    if (validateUbn(input.value).normalized.length === 8) render();
+  });
+
+  // 生成
+  const list = $('gen-list');
+  const foot = $('gen-foot');
+  let current: string[] = [];
+  $('gen-btn').addEventListener('click', () => {
+    current = generateUbns(Number($<HTMLInputElement>('count').value));
+    list.replaceChildren(
+      ...current.map((code) => {
+        const li = el('li');
+        li.append(el('span', 'num', code));
+        const b = el('button', 'btn btn--ghost', '複製') as HTMLButtonElement;
+        b.type = 'button';
+        b.setAttribute('aria-label', `複製 ${code}`);
+        b.addEventListener('click', () => copy(code));
+        li.append(b);
+        return li;
+      }),
+    );
+    list.hidden = false;
+    foot.hidden = false;
+  });
+  $('copy-all').addEventListener('click', () => copy(current.join('\n')));
+</script>
