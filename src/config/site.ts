@@ -28,13 +28,13 @@ export const TOOLS: ToolEntry[] = [
     slug: 'national-id', name: '身分證字號', summary: '驗證、生成（測試用）', status: 'live',
     keywords: '身分證 身份證 字號 驗證 居留證 生成',
     seoTitle: '身分證字號驗證與生成',
-    seoDescription: '台灣身分證字號與新式居留證號驗證工具，檢查碼逐步說明，並可產生測試用號碼。資料只在瀏覽器處理，不會送出。',
+    seoDescription: '台灣身分證字號與新式居留證號驗證工具：檢查英文字母、性別碼與檢查碼，說明不通過的原因，並可產生測試用號碼。資料只在瀏覽器處理，不會送出。',
   },
   {
     slug: 'carrier', name: '手機條碼', summary: '統一發票載具格式檢查', status: 'live',
     keywords: '手機條碼 載具 發票 共通性載具 格式',
     seoTitle: '手機條碼（載具）格式檢查',
-    seoDescription: '檢查統一發票手機條碼載具格式是否正確：斜線開頭加 7 碼。僅檢查格式，不代表已申請。資料只在瀏覽器處理。',
+    seoDescription: '檢查統一發票手機條碼載具格式是否正確：斜線開頭加 7 碼，並說明不符的原因。僅檢查格式，不代表已申請。資料只在瀏覽器處理，不會送出。',
   },
   {
     slug: 'bank-code', name: '銀行代碼', summary: '銀行與分行代碼查詢', status: 'live',
@@ -46,13 +46,13 @@ export const TOOLS: ToolEntry[] = [
     slug: 'zip', name: '郵遞區號', summary: '縣市鄉鎮 3 碼郵遞區號查詢', status: 'live',
     keywords: '郵遞區號 郵區 地址 縣市 鄉鎮 三碼',
     seoTitle: '郵遞區號查詢（3 碼）',
-    seoDescription: '輸入縣市、鄉鎮市區名稱或郵遞區號，查詢台灣 3 碼郵遞區號。資料只在瀏覽器處理。',
+    seoDescription: '輸入縣市、鄉鎮市區名稱或郵遞區號，快速查詢台灣 3 碼郵遞區號，支援「台」與「臺」通用，可一鍵複製。資料只在瀏覽器處理，不會送出。',
   },
   {
     slug: 'roc-year', name: '民國年轉換', summary: '民國年與西元年互轉', status: 'live',
     keywords: '民國 西元 年 轉換 日期 民國年',
     seoTitle: '民國年與西元年轉換',
-    seoDescription: '台灣民國年與西元年互相轉換，支援年份與完整日期，自動判斷輸入是民國或西元。資料只在瀏覽器處理。',
+    seoDescription: '台灣民國年與西元年互相轉換，支援年份與完整日期，自動判斷輸入是民國或西元，也支援民國前。換算公式：西元 = 民國 + 1911。',
   },
   {
     slug: 'amount-zh', name: '中文大寫金額', summary: '數字轉壹萬貳仟', status: 'live',

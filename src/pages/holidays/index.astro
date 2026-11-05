@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 import { YEARS } from '../../lib/holidays';
 
@@ -32,6 +33,15 @@ const t = TOOLS.find((x) => x.slug === 'holidays')!;
   <p class="note">
     內建 {YEARS[0]} 至 {YEARS[YEARS.length - 1]} 年資料，來自公開整理的政府行事曆。實際放假與補班日以行政院人事行政總處公告為準，臨時調整不會即時更新。農曆由瀏覽器內建的農曆計算。
   </p>
+  <About>
+    <h2>怎麼查國定假日與補班日</h2>
+    <p>「查日期」會告訴你某一天是放假、一般上班日，還是補行上班，並顯示農曆日期與節日名稱。「全年清單」列出整年的國定假日、補假與補行上班，方便規劃請假與連假。</p>
+    <h2>常見問題</h2>
+    <h3>資料可靠嗎？</h3>
+    <p>資料整理自公開的政府行事曆，目前內建 2025 至 2027 年。實際放假與補班日以行政院人事行政總處公告為準；臨時調整不會即時更新。</p>
+    <h3>農曆是怎麼算的？</h3>
+    <p>農曆由你的瀏覽器內建的農曆曆法計算，不需要另外下載資料，閏月會標示「閏」字。</p>
+  </About>
   <Toast />
 </Base>
 

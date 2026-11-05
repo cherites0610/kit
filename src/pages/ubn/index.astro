@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'ubn')!;
@@ -41,6 +42,16 @@ const t = TOOLS.find((x) => x.slug === 'ubn')!;
       <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
     </div>
   </section>
+  <About>
+    <h2>統一編號怎麼檢查？</h2>
+    <p>統一編號共 8 碼。檢查時，把每一碼依序乘上 1、2、1、2、1、2、4、1；乘積若是兩位數，就把十位和個位相加。再把 8 個結果加總，總和能被 5 整除就通過（財政部自 2023 年起由 10 放寬為 5）。</p>
+    <p>第 7 碼是 7 的號碼有一個特例：總和加 1 後能被 5 整除，也算通過。畫面上的「計算過程」會逐位列出，方便對照。</p>
+    <h2>常見問題</h2>
+    <h3>通過檢查就代表公司存在嗎？</h3>
+    <p>不代表。通過只表示號碼符合編碼規則，不能證明有這家公司。要確認公司是否登記，請到經濟部商工登記公示資料查詢服務。</p>
+    <h3>生成的統編可以拿來登記公司嗎？</h3>
+    <p>不行。生成的號碼只是符合規則的隨機數字，用於軟體測試、表單驗證與教學，可能恰巧與真實公司相同。</p>
+  </About>
   <Toast />
 </Base>
 

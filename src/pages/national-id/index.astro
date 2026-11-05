@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 import { LETTER_PLACE } from '../../lib/national-id';
 
@@ -57,6 +58,16 @@ const t = TOOLS.find((x) => x.slug === 'national-id')!;
       <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
     </div>
   </section>
+  <About>
+    <h2>身分證字號怎麼檢查？</h2>
+    <p>身分證字號共 10 碼：第 1 碼是英文字母，第 2 碼是性別（1 男、2 女；新式居留證為 8 男、9 女），中間 7 碼是流水號，最後 1 碼是檢查碼。</p>
+    <p>檢查時，先把英文字母換成兩位數（A=10、B=11，依此類推），十位數乘 1、個位數乘 9，再把後面 8 碼依序乘 8、7、6、5、4、3、2、1，最後加上檢查碼。總和能被 10 整除就通過。</p>
+    <h2>常見問題</h2>
+    <h3>英文字母代表什麼？</h3>
+    <p>字母原本代表發證時的戶籍縣市，例如 A 是臺北市、F 是新北市。今天它只反映當年的登記地，不代表現在住哪裡。</p>
+    <h3>通過檢查就是真的身分證字號嗎？</h3>
+    <p>不是。通過只代表符合編碼規則。生成的號碼僅供測試，不對應任何真人，請勿用於冒用身分或不實申報。</p>
+  </About>
   <Toast />
 </Base>
 

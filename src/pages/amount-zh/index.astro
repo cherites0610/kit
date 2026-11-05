@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'amount-zh')!;
@@ -20,6 +21,16 @@ const t = TOOLS.find((x) => x.slug === 'amount-zh')!;
       <p class="slip-empty">輸入金額後，大寫結果會印在這裡。</p>
     </div>
   </section>
+  <About>
+    <h2>中文大寫金額寫法</h2>
+    <p>中文大寫金額用壹、貳、參、肆、伍、陸、柒、捌、玖代替一到九，單位用拾、佰、仟、萬、億、兆，並以「元」結尾；沒有角分時加「整」。例如 12345 寫成「壹萬貳仟參佰肆拾伍元整」。</p>
+    <p>支票、收據與合約常要求寫大寫，是為了避免數字被塗改。數字中間有連續的零時，只寫一個「零」，例如 10001 寫成「壹萬零壹元整」。</p>
+    <h2>常見問題</h2>
+    <h3>可以轉換小數嗎？</h3>
+    <p>可以，最多到小數第 2 位，分別是角和分，例如 1,234.5 會轉成「壹仟貳佰參拾肆元伍角整」。</p>
+    <h3>「參」和「叁」哪個對？</h3>
+    <p>這裡使用「參」，是台灣票據與公文常見的寫法。</p>
+  </About>
   <Toast />
 </Base>
 
