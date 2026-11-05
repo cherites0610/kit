@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'fake-data')!;
@@ -27,6 +28,15 @@ const t = TOOLS.find((x) => x.slug === 'fake-data')!;
       姓名、地址、電話都是隨機組合，不對應任何真人；手機與市話可能恰巧與真實號碼相同，請勿用來撥打或發送訊息。電子郵件使用保留網域 example.com。
     </p>
   </section>
+  <About>
+    <h2>測試假資料可以做什麼</h2>
+    <p>開發表單、資料庫或 API 時，常需要看起來像真的台灣資料：姓名、身分證字號、手機、市話、地址與統一編號。這裡一次產生最多 10 筆，並可一鍵複製。</p>
+    <h2>常見問題</h2>
+    <h3>這些資料是真人的嗎？</h3>
+    <p>不是，全部隨機拼湊。身分證字號與統一編號能通過檢查規則，但不對應任何真人或公司；手機與市話可能恰巧與真實號碼相同，請勿用來撥打或發送訊息。電子郵件使用保留網域 example.com，不會寄到真實信箱。</p>
+    <h3>可以用在正式環境嗎？</h3>
+    <p>不行。這些資料僅供開發、測試與教學，請勿用於冒用身分、申辦或任何不實用途。</p>
+  </About>
   <Toast />
 </Base>
 

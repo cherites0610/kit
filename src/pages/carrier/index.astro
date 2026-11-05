@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'carrier')!;
@@ -24,6 +25,15 @@ const t = TOOLS.find((x) => x.slug === 'carrier')!;
       <a href="https://www.einvoice.nat.gov.tw/" target="_blank" rel="noopener noreferrer">財政部電子發票整合服務平台</a>。
     </p>
   </section>
+  <About>
+    <h2>手機條碼的格式</h2>
+    <p>手機條碼是統一發票的共通性載具，由「/」加 7 個字元組成，共 8 個字元。字元只能是大寫英文字母、數字，以及 + - . 三個符號。</p>
+    <h2>常見問題</h2>
+    <h3>格式正確就能用來歸戶發票嗎？</h3>
+    <p>不一定。格式正確只表示寫法沒錯，這組條碼是否真的已向財政部申請，只有財政部電子發票整合服務平台能確認。</p>
+    <h3>輸入小寫或全形可以嗎？</h3>
+    <p>可以。這裡會自動轉成大寫與半形再檢查。實際結帳時，請依載具 APP 或平台顯示的條碼為準。</p>
+  </About>
   <Toast />
 </Base>
 

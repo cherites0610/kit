@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 import { CITIES } from '../../lib/zip';
 
@@ -28,6 +29,15 @@ const t = TOOLS.find((x) => x.slug === 'zip')!;
     <ul class="results" id="list" hidden></ul>
     <p class="note">這裡是 3 碼郵遞區號。完整 5 碼或 6 碼（含路段、門牌）請到中華郵政查詢。</p>
   </section>
+  <About>
+    <h2>3 碼郵遞區號</h2>
+    <p>台灣郵遞區號以鄉鎮市區為單位，前 3 碼代表所在的縣市與鄉鎮市區，例如臺北市大安區是 106。寄信時可以搭配後 3 碼寫成 6 碼，後 3 碼對應道路、門牌範圍。</p>
+    <h2>常見問題</h2>
+    <h3>這裡查得到 6 碼嗎？</h3>
+    <p>查不到。這個工具只提供 3 碼。完整的 5 碼或 6 碼需要依路段與門牌判斷，請到中華郵政的郵遞區號查詢服務輸入完整地址。</p>
+    <h3>輸入「台北」會找不到「臺北市」嗎？</h3>
+    <p>會找得到。「台」與「臺」視為相同，也可以只輸入區名，或用空白分隔縣市與區名。</p>
+  </About>
   <Toast />
 </Base>
 

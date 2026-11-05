@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'bank-code')!;
@@ -17,6 +18,14 @@ const t = TOOLS.find((x) => x.slug === 'bank-code')!;
     <ul class="results" id="list" hidden></ul>
     <p class="note">資料來源：公開整理的金融機構代碼（更新至 2023 年 10 月），分行可能已有異動。匯款前請與銀行確認。</p>
   </section>
+  <About>
+    <h2>銀行代碼與分行代碼</h2>
+    <p>台灣的金融機構代碼分兩層：銀行代碼是 3 碼，分行代碼是 7 碼，由銀行 3 碼加上分行 4 碼組成。轉帳、匯款或設定薪資帳戶時，通常需要銀行代碼；跨行匯款表單有時會要求完整的 7 碼。</p>
+    <p>在上方輸入銀行名稱、簡稱、分行名稱或代碼即可，可以用空白分隔多個關鍵字，例如「國泰 信義」。</p>
+    <h2>常見問題</h2>
+    <h3>查到的分行還存在嗎？</h3>
+    <p>這裡的資料更新至 2023 年 10 月，之後新設、裁撤或更名的分行不會反映。重要匯款請再向銀行確認。</p>
+  </About>
   <Toast />
 </Base>
 

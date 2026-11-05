@@ -165,3 +165,10 @@ select.field { appearance: auto; }
 .kind--makeup { background: var(--red); border-color: var(--red); color: var(--paper); }
 .kind--work, .kind--weekend { color: var(--ink-soft); border-color: var(--rule); }
 .slip + .slip { margin-top: 1.5rem; }
+
+/* 工具說明（給讀者，也給搜尋引擎） */
+.about { margin-top: 2.5rem; padding-top: 1.5rem; border-top: 2px dashed var(--rule); }
+.about h2 { font-size: 1.1875rem; font-weight: 900; margin-top: 1.5rem; text-wrap: balance; }
+.about h2:first-child { margin-top: 0; }
+.about h3 { font-size: 1rem; font-weight: 700; margin: 1.25rem 0 0; }
+.about p { margin-top: 0.5rem; font-size: 0.9375rem; color: #333; max-width: 65ch; }

@@ -2,6 +2,7 @@
 import Base from '../../layouts/Base.astro';
 import ToolHead from '../../components/ToolHead.astro';
 import Toast from '../../components/Toast.astro';
+import About from '../../components/About.astro';
 import { TOOLS } from '../../config/site';
 
 const t = TOOLS.find((x) => x.slug === 'roc-year')!;
@@ -23,6 +24,16 @@ const t = TOOLS.find((x) => x.slug === 'roc-year')!;
       <p class="slip-empty">輸入後，轉換結果會印在這裡。</p>
     </div>
   </section>
+  <About>
+    <h2>民國年與西元年怎麼換算？</h2>
+    <p>西元年 = 民國年 + 1911。例如民國 114 年是西元 2025 年，民國 1 年是西元 1912 年。反過來，民國年 = 西元年 − 1911。</p>
+    <p>民國元年之前稱為「民國前」，民國前 1 年是西元 1911 年。這個工具也支援民國前。</p>
+    <h2>常見問題</h2>
+    <h3>怎麼知道我輸入的是民國還是西元？</h3>
+    <p>4 位數的年份視為西元，3 位數以下視為民國；寫上「民國」或「西元」則以你寫的為準。完整日期可以用 114/3/5、2025-03-05、民國114年3月5日 或 1140305 這類寫法。</p>
+    <h3>哪些場合常用民國年？</h3>
+    <p>公文、報稅、保險單、戶籍謄本與政府表單大多使用民國年，國外文件與系統多使用西元年，轉換時要特別留意年份。</p>
+  </About>
   <Toast />
 </Base>
 
