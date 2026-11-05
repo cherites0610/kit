@@ -1,0 +1,95 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+import { YEARS } from '../../lib/holidays';
+
+const t = TOOLS.find((x) => x.slug === 'holidays')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/holidays/">
+  <ToolHead crumb="國定假日" title="國定假日、補班日與農曆" sub="查某一天要不要上班，或看一整年的放假與補班。" />
+
+  <div class="tabs" role="tablist" aria-label="功能">
+    <button class="tab" role="tab" id="tab-day" aria-controls="panel-day" aria-selected="true">查日期</button>
+    <button class="tab" role="tab" id="tab-year" aria-controls="panel-year" aria-selected="false" tabindex="-1">全年清單</button>
+  </div>
+
+  <section class="panel" id="panel-day" role="tabpanel" aria-labelledby="tab-day">
+    <label class="label" for="date">日期</label>
+    <input class="code-input" id="date" type="date" style="letter-spacing:0.02em" />
+    <div class="slip-slot" id="slot" aria-live="polite"></div>
+  </section>
+
+  <section class="panel" id="panel-year" role="tabpanel" aria-labelledby="tab-year" hidden>
+    <label class="label" for="year">年份</label>
+    <select class="field" id="year">
+      {YEARS.map((y) => <option value={y}>{y}（民國 {y - 1911} 年）</option>)}
+    </select>
+    <ul class="results" id="year-list"></ul>
+  </section>
+
+  <p class="note">
+    內建 {YEARS[0]} 至 {YEARS[YEARS.length - 1]} 年資料，來自公開整理的政府行事曆。實際放假與補班日以行政院人事行政總處公告為準，臨時調整不會即時更新。農曆由瀏覽器內建的農曆計算。
+  </p>
+  <Toast />
+</Base>
+
+<script>
+  import { KIND_LABEL, YEARS, dayInfo, yearEntries } from '../../lib/holidays';
+  import { $, copyButton, el, initTabs, row, slip } from '../../lib/ui';
+
+  initTabs(['day', 'year']);
+
+  const pad = (n: number) => String(n).padStart(2, '0');
+  const now = new Date();
+  const today = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+
+  const date = $<HTMLInputElement>('date');
+  const slot = $('slot');
+  date.value = today;
+
+  const kindClass = { holiday: 'kind--holiday', weekend: 'kind--weekend', workday: 'kind--work', 'makeup-workday': 'kind--makeup' } as const;
+
+  function renderDay() {
+    const info = dayInfo(date.value);
+    if (!info) {
+      slot.replaceChildren(el('p', 'slip-empty', '請選擇一個有效的日期。'));
+      return;
+    }
+    const s = slip('查詢證明聯', info.kind === 'makeup-workday');
+    s.append(el('p', 'slip__code', info.date), el('hr'));
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('星期', info.weekday), row('農曆', info.lunar));
+    if (info.name) rows.append(row('名稱', info.name));
+    s.append(rows, el('hr'));
+    s.append(el('p', 'slip__verdict', KIND_LABEL[info.kind]));
+    if (!info.hasData) s.append(el('p', 'slip__note', `沒有 ${info.date.slice(0, 4)} 年的假日資料，這裡只依週六、週日判斷，國定假日與補班請另外確認。`));
+    const actions = el('div', 'slip__actions');
+    actions.append(copyButton('複製結果', () => `${info.date}（${info.weekday}）農曆${info.lunar}：${KIND_LABEL[info.kind]}${info.name ? '・' + info.name : ''}`));
+    s.append(actions);
+    slot.replaceChildren(s);
+  }
+  date.addEventListener('input', renderDay);
+  renderDay();
+
+  const year = $<HTMLSelectElement>('year');
+  const yearList = $('year-list');
+  year.value = String(YEARS.includes(now.getFullYear()) ? now.getFullYear() : YEARS[YEARS.length - 1]);
+
+  function renderYear() {
+    const entries = yearEntries(Number(year.value));
+    yearList.replaceChildren(
+      ...entries.map((e) => {
+        const li = el('li');
+        const name = el('span', 'name', e.name || '放假');
+        name.append(el('small', undefined, `${e.date}（${e.weekday}）農曆${e.lunar}`));
+        const kind = e.kind === 'holiday' ? 'holiday' : 'makeup-workday';
+        li.append(name, el('span', `kind ${kindClass[kind]}`, KIND_LABEL[kind]));
+        return li;
+      }),
+    );
+  }
+  year.addEventListener('change', renderYear);
+  renderYear();
+</script>

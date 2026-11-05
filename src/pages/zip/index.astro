@@ -1,0 +1,75 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+import { CITIES } from '../../lib/zip';
+
+const t = TOOLS.find((x) => x.slug === 'zip')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/zip/">
+  <ToolHead crumb="郵遞區號" title="郵遞區號查詢（3 碼）" sub="輸入鄉鎮市區名稱，或選縣市，找出 3 碼郵遞區號。" />
+
+  <section class="panel">
+    <div class="opts">
+      <div class="full">
+        <label class="label" for="q">區域名稱或郵遞區號</label>
+        <input class="field" id="q" type="search" autocomplete="off" placeholder="例如：大安、台中 西屯、106" />
+      </div>
+      <div class="full">
+        <label class="label" for="city">縣市</label>
+        <select class="field" id="city">
+          <option value="">全部縣市</option>
+          {CITIES.map((c) => <option value={c}>{c}</option>)}
+        </select>
+      </div>
+    </div>
+    <p class="status" id="status" role="status">輸入名稱或選一個縣市。</p>
+    <ul class="results" id="list" hidden></ul>
+    <p class="note">這裡是 3 碼郵遞區號。完整 5 碼或 6 碼（含路段、門牌）請到中華郵政查詢。</p>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { searchZip } from '../../lib/zip';
+  import { $, copyButton, el } from '../../lib/ui';
+
+  const q = $<HTMLInputElement>('q');
+  const city = $<HTMLSelectElement>('city');
+  const status = $('status');
+  const list = $('list');
+  const MAX = 60;
+
+  function run() {
+    const text = q.value.trim();
+    if (text === '' && city.value === '') {
+      list.hidden = true;
+      status.textContent = '輸入名稱或選一個縣市。';
+      return;
+    }
+    const hits = searchZip(text, city.value);
+    if (hits.length === 0) {
+      list.hidden = true;
+      status.textContent = '找不到符合的區域。可以只輸入區名，例如「大安」。';
+      return;
+    }
+    const shown = hits.slice(0, MAX);
+    status.textContent = hits.length > MAX ? `共 ${hits.length} 筆，顯示前 ${MAX} 筆。請輸入更多文字縮小範圍。` : `共 ${hits.length} 筆。`;
+    list.replaceChildren(
+      ...shown.map((h) => {
+        const li = el('li');
+        li.append(
+          el('span', 'code', h.zip),
+          el('span', 'name', `${h.city}${h.area}`),
+          copyButton('複製', () => h.zip, `複製郵遞區號 ${h.zip}`),
+        );
+        return li;
+      }),
+    );
+    list.hidden = false;
+  }
+
+  q.addEventListener('input', run);
+  city.addEventListener('change', run);
+</script>

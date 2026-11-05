@@ -1,0 +1,77 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'roc-year')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/roc-year/">
+  <ToolHead crumb="民國年轉換" title="民國年與西元年轉換" sub="輸入年份或日期，自動判斷是民國還是西元。" />
+
+  <section class="panel">
+    <form id="form" novalidate>
+      <label class="label" for="q">年份或日期</label>
+      <input class="code-input" id="q" autocomplete="off" placeholder="114/3/5" aria-describedby="hint" style="letter-spacing:0.05em" />
+      <p class="hint" id="hint">可以輸入 114、2025、114/3/5、2025-03-05、民國114年3月5日。4 位數視為西元，3 位數以下視為民國。</p>
+      <div class="opts" style="margin-top:0.75rem">
+        <button class="btn" type="submit" style="margin-top:0">轉換</button>
+        <button class="btn btn--ghost" id="today" type="button" style="min-height:3.25rem;width:100%">今天</button>
+      </div>
+    </form>
+    <div class="slip-slot" id="slot" aria-live="polite">
+      <p class="slip-empty">輸入後，轉換結果會印在這裡。</p>
+    </div>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { ROC_FAILURE, convertRoc, rocYearLabel } from '../../lib/roc-date';
+  import { $, copyButton, el, row, slip } from '../../lib/ui';
+
+  const input = $<HTMLInputElement>('q');
+  const slot = $('slot');
+  const p2 = (n: number) => String(n).padStart(2, '0');
+
+  function render() {
+    const r = convertRoc(input.value);
+    if (!r.ok) {
+      const s = slip('轉換證明聯', true);
+      s.append(el('p', 'slip__verdict', '無法轉換'), el('p', 'slip__reason', ROC_FAILURE[r.failure!]));
+      slot.replaceChildren(s);
+      return;
+    }
+    const roc = rocYearLabel(r.adYear!);
+    const hasDate = r.month !== undefined && r.day !== undefined;
+    const rocText = hasDate ? `${roc} ${r.month} 月 ${r.day} 日` : roc;
+    const adText = hasDate ? `西元 ${r.adYear} 年 ${r.month} 月 ${r.day} 日` : `西元 ${r.adYear} 年`;
+    const rocSlash = r.beforeRoc ? '' : `${r.rocYear}/${p2(r.month ?? 0)}/${p2(r.day ?? 0)}`;
+    const adSlash = `${r.adYear}/${p2(r.month ?? 0)}/${p2(r.day ?? 0)}`;
+
+    const s = slip('轉換證明聯');
+    s.append(el('p', 'amount-text', hasDate ? rocText : roc), el('hr'));
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('民國', rocText), row('西元', adText));
+    if (hasDate) {
+      if (rocSlash) rows.append(row('民國（簡寫）', rocSlash));
+      rows.append(row('西元（簡寫）', adSlash));
+    }
+    s.append(rows, el('hr'));
+    s.append(el('p', 'slip__note', `輸入被判定為${r.from === 'roc' ? '民國' : '西元'}。民國元年為西元 1912 年。`));
+    const actions = el('div', 'slip__actions');
+    actions.append(copyButton('複製結果', () => `${rocText} ＝ ${adText}`));
+    s.append(actions);
+    slot.replaceChildren(s);
+  }
+
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    render();
+  });
+  $('today').addEventListener('click', () => {
+    const d = new Date();
+    input.value = `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`;
+    render();
+  });
+</script>
