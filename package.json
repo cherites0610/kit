@@ -9,13 +9,6 @@
     "preview": "astro preview",
     "test": "vitest run"
   },
-  "devEngines": {
-    "packageManager": {
-      "name": "pnpm",
-      "version": "12.16.1",
-      "onFail": "download"
-    }
-  },
   "packageManager": "pnpm@12.16.1",
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",
