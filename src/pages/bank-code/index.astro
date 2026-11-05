@@ -1,0 +1,90 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'bank-code')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/bank-code/">
+  <ToolHead crumb="銀行代碼" title="銀行代碼與分行代碼查詢" sub="輸入銀行名稱、分行名稱或代碼，馬上找到。" />
+
+  <section class="panel">
+    <label class="label" for="q">銀行或分行</label>
+    <input class="field" id="q" type="search" autocomplete="off" placeholder="例如：國泰、台新 信義、0130" aria-describedby="hint" />
+    <p class="hint" id="hint">銀行代碼是 3 碼；分行代碼是 7 碼（銀行 3 碼加分行 4 碼）。</p>
+    <p class="status" id="status" role="status">輸入關鍵字開始查詢。</p>
+    <ul class="results" id="list" hidden></ul>
+    <p class="note">資料來源：公開整理的金融機構代碼（更新至 2023 年 10 月），分行可能已有異動。匯款前請與銀行確認。</p>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { type BankData, searchBanks } from '../../lib/bank';
+  import { $, copyButton, el } from '../../lib/ui';
+
+  const q = $<HTMLInputElement>('q');
+  const status = $('status');
+  const list = $('list');
+  let data: BankData | null = null;
+  let loading: Promise<void> | null = null;
+
+  // 資料約 150 KB，等使用者開始輸入才下載
+  function load(): Promise<void> {
+    loading ??= fetch('/data/banks.json')
+      .then((r) => {
+        if (!r.ok) throw new Error(String(r.status));
+        return r.json() as Promise<BankData>;
+      })
+      .then((d) => {
+        data = d;
+      })
+      .catch(() => {
+        loading = null;
+        throw new Error('load');
+      });
+    return loading;
+  }
+
+  async function run() {
+    const text = q.value.trim();
+    status.classList.remove('status--error');
+    if (text === '') {
+      list.hidden = true;
+      status.textContent = '輸入關鍵字開始查詢。';
+      return;
+    }
+    if (!data) {
+      status.textContent = '載入資料中…';
+      try {
+        await load();
+      } catch {
+        list.hidden = true;
+        status.textContent = '資料載入失敗，請檢查網路後重新輸入。';
+        status.classList.add('status--error');
+        return;
+      }
+    }
+    if (q.value.trim() !== text) return; // 已有更新的輸入
+    const { hits, total } = searchBanks(data!, text);
+    if (hits.length === 0) {
+      list.hidden = true;
+      status.textContent = '找不到符合的銀行或分行。試試簡稱，或只輸入部分名稱。';
+      return;
+    }
+    status.textContent = total > hits.length ? `共 ${total} 筆，顯示前 ${hits.length} 筆。請輸入更多文字縮小範圍。` : `共 ${total} 筆。`;
+    list.replaceChildren(
+      ...hits.map((h) => {
+        const li = el('li');
+        const name = el('span', 'name', h.name);
+        name.append(el('small', undefined, h.kind === 'bank' ? '銀行' : '分行'));
+        li.append(el('span', 'code', h.code), name, copyButton('複製', () => h.code, `複製代碼 ${h.code}`));
+        return li;
+      }),
+    );
+    list.hidden = false;
+  }
+
+  q.addEventListener('input', run);
+</script>

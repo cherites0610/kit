@@ -143,3 +143,25 @@ a.tool-row .go { font-family: var(--font-num); font-size: 1.25rem; }
   .slip { animation: none; }
   .btn { transition: none; }
 }
+
+/* 共用：下拉、選項列、結果列 */
+select.field { appearance: auto; }
+.opts { display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem; }
+.opts .field { font-size: 1rem; }
+.opts .full { grid-column: 1 / -1; }
+.results { list-style: none; margin: 1rem 0 0; padding: 0; background: var(--paper); border: 2px solid var(--ink); }
+.results li { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; padding: 0.625rem 1rem; }
+.results li + li { border-top: 2px dashed var(--rule); }
+.results .code { font: 700 1.25rem var(--font-num); letter-spacing: 0.1em; min-width: 5.5ch; }
+.results .name { flex: 1; min-width: 0; overflow-wrap: anywhere; font-size: 0.9375rem; }
+.results .name small { display: block; color: var(--ink-soft); font-size: 0.8125rem; }
+.status { margin-top: 1rem; color: var(--ink-soft); font-size: 0.875rem; }
+.status--error { color: var(--red); font-weight: 700; }
+.amount-text { text-align: center; font-size: 1.5rem; font-weight: 900; line-height: 1.5; overflow-wrap: anywhere; letter-spacing: 0.04em; }
+.note { margin-top: 1rem; font-size: 0.8125rem; color: var(--ink-soft); }
+.note a { text-underline-offset: 3px; }
+.kind { font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border: 1.5px solid var(--ink); white-space: nowrap; }
+.kind--holiday { background: var(--ink); color: var(--paper); }
+.kind--makeup { background: var(--red); border-color: var(--red); color: var(--paper); }
+.kind--work, .kind--weekend { color: var(--ink-soft); border-color: var(--rule); }
+.slip + .slip { margin-top: 1.5rem; }

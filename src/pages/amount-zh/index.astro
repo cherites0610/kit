@@ -1,0 +1,65 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'amount-zh')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/amount-zh/">
+  <ToolHead crumb="中文大寫金額" title="中文大寫金額轉換" sub="輸入阿拉伯數字，轉成支票、收據用的中文大寫。" />
+
+  <section class="panel">
+    <form id="form" novalidate>
+      <label class="label" for="amt">金額</label>
+      <input class="code-input" id="amt" inputmode="decimal" autocomplete="off" placeholder="12345" aria-describedby="hint" style="letter-spacing:0.05em" />
+      <p class="hint" id="hint">可含千分位逗號與小數（角、分），例如 1,234.5。</p>
+      <button class="btn" type="submit">轉換</button>
+    </form>
+    <div class="slip-slot" id="slot" aria-live="polite">
+      <p class="slip-empty">輸入金額後，大寫結果會印在這裡。</p>
+    </div>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { AMOUNT_FAILURE, amountToZh } from '../../lib/amount-zh';
+  import { $, copyButton, el, row, slip } from '../../lib/ui';
+
+  const input = $<HTMLInputElement>('amt');
+  const slot = $('slot');
+
+  function render(announceEmpty: boolean) {
+    const r = amountToZh(input.value);
+    if (r.failure === 'empty') {
+      slot.replaceChildren(el('p', 'slip-empty', announceEmpty ? AMOUNT_FAILURE.empty : '輸入金額後，大寫結果會印在這裡。'));
+      return;
+    }
+    if (!r.ok) {
+      // 輸入中不提早報錯：只在送出時顯示
+      if (announceEmpty) {
+        const s = slip('轉換證明聯', true);
+        s.append(el('p', 'slip__verdict', '無法轉換'), el('p', 'slip__reason', AMOUNT_FAILURE[r.failure!]));
+        slot.replaceChildren(s);
+      }
+      return;
+    }
+    const s = slip('轉換證明聯');
+    s.append(el('p', 'amount-text', r.text!), el('hr'));
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('輸入', input.value.trim()), row('加註幣別', r.withCurrency!));
+    s.append(rows, el('hr'));
+    const actions = el('div', 'slip__actions');
+    actions.style.gap = '0.75rem';
+    actions.append(copyButton('複製大寫', () => r.text!), copyButton('複製含新臺幣', () => r.withCurrency!));
+    s.append(actions);
+    slot.replaceChildren(s);
+  }
+
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    render(true);
+  });
+  input.addEventListener('input', () => render(false));
+</script>

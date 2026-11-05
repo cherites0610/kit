@@ -1,0 +1,11 @@
+---
+interface Props {
+  crumb: string;
+  title: string;
+  sub: string;
+}
+const { crumb, title, sub } = Astro.props;
+---
+<p class="crumb"><a href="/">首頁</a> › {crumb}</p>
+<h1 class="page-title">{title}</h1>
+<p class="page-sub">{sub}</p>

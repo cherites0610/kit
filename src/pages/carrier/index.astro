@@ -1,0 +1,61 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'carrier')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/carrier/">
+  <ToolHead crumb="手機條碼" title="手機條碼格式檢查" sub="確認統一發票手機條碼載具的格式是否正確。" />
+
+  <section class="panel">
+    <form id="form" novalidate>
+      <label class="label" for="code">手機條碼</label>
+      <input class="code-input" id="code" autocapitalize="characters" autocomplete="off" spellcheck="false" placeholder="/ABC+123" aria-describedby="hint" />
+      <p class="hint" id="hint">「/」開頭加 7 碼，共 8 個字元。可直接貼上。</p>
+      <button class="btn" type="submit">檢查</button>
+    </form>
+    <div class="slip-slot" id="slot" aria-live="polite">
+      <p class="slip-empty">輸入手機條碼後，結果會印在這裡。</p>
+    </div>
+    <p class="note">
+      這裡只能檢查格式，無法知道這組條碼是否已經申請。要確認是否有效，請到
+      <a href="https://www.einvoice.nat.gov.tw/" target="_blank" rel="noopener noreferrer">財政部電子發票整合服務平台</a>。
+    </p>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { CARRIER_FAILURE, validateCarrier } from '../../lib/carrier';
+  import { $, copyButton, el, row, slip } from '../../lib/ui';
+
+  const input = $<HTMLInputElement>('code');
+  const slot = $('slot');
+
+  function render() {
+    const r = validateCarrier(input.value);
+    const s = slip('格式檢查證明聯', !r.ok);
+    s.append(el('p', 'slip__code', r.normalized || '--------'), el('hr'));
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('字元數', `${r.normalized.length} / 8`));
+    s.append(rows, el('hr'));
+    s.append(el('p', 'slip__verdict', r.ok ? '格式正確' : '不通過'));
+    if (!r.ok && r.failure) s.append(el('p', 'slip__reason', CARRIER_FAILURE[r.failure]));
+    if (r.ok) s.append(el('p', 'slip__note', '格式正確不代表這組條碼已經申請。'));
+    const actions = el('div', 'slip__actions');
+    actions.append(copyButton('複製條碼', () => r.normalized));
+    s.append(actions);
+    slot.replaceChildren(s);
+  }
+
+  $('form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (input.value.trim() === '') slot.replaceChildren(el('p', 'slip-empty', CARRIER_FAILURE.empty));
+    else render();
+  });
+  input.addEventListener('input', () => {
+    if (validateCarrier(input.value).normalized.length === 8) render();
+  });
+</script>

@@ -1,0 +1,124 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+import { LETTER_PLACE } from '../../lib/national-id';
+
+const t = TOOLS.find((x) => x.slug === 'national-id')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/national-id/">
+  <ToolHead crumb="身分證字號" title="身分證字號驗證與生成" sub="驗證 10 碼身分證字號或新式居留證號，或產生測試用號碼。" />
+
+  <div class="tabs" role="tablist" aria-label="功能">
+    <button class="tab" role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="true">驗證</button>
+    <button class="tab" role="tab" id="tab-gen" aria-controls="panel-gen" aria-selected="false" tabindex="-1">生成</button>
+  </div>
+
+  <section class="panel" id="panel-verify" role="tabpanel" aria-labelledby="tab-verify">
+    <form id="verify-form" novalidate>
+      <label class="label" for="nid">身分證字號</label>
+      <input class="code-input" id="nid" inputmode="text" autocapitalize="characters" autocomplete="off" placeholder="A123456789" aria-describedby="nid-hint" />
+      <p class="hint" id="nid-hint">1 個英文字母加 9 個數字，大小寫皆可，可直接貼上。</p>
+      <button class="btn" type="submit">驗證</button>
+    </form>
+    <div class="slip-slot" id="slot" aria-live="polite">
+      <p class="slip-empty">輸入身分證字號後，結果會印在這裡。</p>
+    </div>
+  </section>
+
+  <section class="panel" id="panel-gen" role="tabpanel" aria-labelledby="tab-gen" hidden>
+    <div class="opts">
+      <div>
+        <label class="label" for="g-gender">性別</label>
+        <select class="field" id="g-gender">
+          <option value="">隨機</option>
+          <option value="男">男</option>
+          <option value="女">女</option>
+        </select>
+      </div>
+      <div>
+        <label class="label" for="g-letter">發證地</label>
+        <select class="field" id="g-letter">
+          <option value="">隨機</option>
+          {Object.entries(LETTER_PLACE).map(([k, v]) => <option value={k}>{k} {v}</option>)}
+        </select>
+      </div>
+      <div>
+        <label class="label" for="count">數量</label>
+        <input class="code-input count" id="count" type="number" min="1" max="10" value="1" inputmode="numeric" />
+      </div>
+      <button class="btn" id="gen-btn" type="button" style="margin-top:1.7rem;min-height:3.5rem">生成</button>
+    </div>
+    <p class="hint">產生符合檢查規則的測試用號碼，不對應任何真人。一次最多 10 筆。</p>
+    <ul class="results" id="gen-list" hidden></ul>
+    <div class="gen-foot" id="gen-foot" hidden>
+      <span>每一筆都通過驗證</span>
+      <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
+    </div>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { NATIONAL_ID_FAILURE, generateNationalId, validateNationalId } from '../../lib/national-id';
+  import { $, copy, copyButton, el, initTabs, row, slip } from '../../lib/ui';
+
+  initTabs(['verify', 'gen']);
+
+  const input = $<HTMLInputElement>('nid');
+  const slot = $('slot');
+
+  function render() {
+    const r = validateNationalId(input.value);
+    const s = slip('驗證證明聯', !r.ok);
+    s.append(el('p', 'slip__code', r.normalized || '----------'), el('hr'));
+    const rows = el('dl', 'slip__rows');
+    rows.append(row('位數', String(r.normalized.length)));
+    if (r.kind) rows.append(row('類型', r.kind === 'citizen' ? '國民身分證' : '新式居留證'));
+    if (r.gender) rows.append(row('性別', r.gender));
+    if (r.place) rows.append(row('發證地字母', `${r.normalized[0]} ${r.place}`));
+    s.append(rows, el('hr'));
+    s.append(el('p', 'slip__verdict', r.ok ? '格式正確' : '不通過'));
+    if (!r.ok && r.failure) s.append(el('p', 'slip__reason', NATIONAL_ID_FAILURE[r.failure]));
+    if (r.ok) s.append(el('p', 'slip__note', '格式正確只代表符合編碼規則，不代表這個號碼真的存在或屬於某個人。發證地字母僅反映當年的戶籍登記地。'));
+    const actions = el('div', 'slip__actions');
+    actions.append(
+      copyButton('複製結果', () => `${r.normalized}：${r.ok ? '格式正確' : '不通過（' + NATIONAL_ID_FAILURE[r.failure!] + '）'}`),
+    );
+    s.append(actions);
+    slot.replaceChildren(s);
+  }
+
+  $('verify-form').addEventListener('submit', (e) => {
+    e.preventDefault();
+    if (input.value.trim() === '') slot.replaceChildren(el('p', 'slip-empty', NATIONAL_ID_FAILURE.empty));
+    else render();
+  });
+  input.addEventListener('input', () => {
+    if (validateNationalId(input.value).normalized.length === 10) render();
+  });
+
+  const list = $('gen-list');
+  const foot = $('gen-foot');
+  let current: string[] = [];
+  $('gen-btn').addEventListener('click', () => {
+    const n = Math.min(Math.max(Number($<HTMLInputElement>('count').value) || 1, 1), 10);
+    const gender = $<HTMLSelectElement>('g-gender').value as '男' | '女' | '';
+    const letter = $<HTMLSelectElement>('g-letter').value;
+    const set = new Set<string>();
+    // 條件固定時 7 位隨機數仍有足夠空間，不會卡住
+    while (set.size < n) set.add(generateNationalId({ gender: gender || undefined, letter: letter || undefined }));
+    current = [...set];
+    list.replaceChildren(
+      ...current.map((id) => {
+        const li = el('li');
+        li.append(el('span', 'code', id), copyButton('複製', () => id, `複製 ${id}`));
+        return li;
+      }),
+    );
+    list.hidden = false;
+    foot.hidden = false;
+  });
+  $('copy-all').addEventListener('click', () => copy(current.join('\n')));
+</script>

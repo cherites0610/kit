@@ -23,7 +23,7 @@ import { SITE, TOOLS } from '../config/site';
               <span class="tool-row__name">{t.name}</span>
               <span class="tool-row__sum">{t.summary}</span>
             </span>
-            <span class="tag tag--new">新</span>
+            {t.isNew && <span class="tag tag--new">新</span>}
             <span class="go" aria-hidden="true">&rarr;</span>
           </a>
         ) : (

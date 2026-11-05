@@ -1,0 +1,63 @@
+---
+import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'fake-data')!;
+---
+<Base title={t.seoTitle} description={t.seoDescription} path="/fake-data/">
+  <ToolHead crumb="測試假資料" title="台灣測試用假資料" sub="一次產生姓名、身分證、手機、地址等，開發與測試用。" />
+
+  <section class="panel">
+    <div class="count-row">
+      <div>
+        <label class="label" for="count">筆數</label>
+        <input class="code-input count" id="count" type="number" min="1" max="10" value="3" inputmode="numeric" />
+      </div>
+      <button class="btn" id="gen-btn" type="button">產生</button>
+    </div>
+    <p class="hint">一次最多 10 筆。每按一次都會重新產生。</p>
+    <div id="out" aria-live="polite"></div>
+    <div class="gen-foot" id="foot" hidden>
+      <span>全部資料皆為隨機拼湊</span>
+      <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
+    </div>
+    <p class="note">
+      姓名、地址、電話都是隨機組合，不對應任何真人；手機與市話可能恰巧與真實號碼相同，請勿用來撥打或發送訊息。電子郵件使用保留網域 example.com。
+    </p>
+  </section>
+  <Toast />
+</Base>
+
+<script>
+  import { FAKE_FIELDS, type FakePerson, generatePeople } from '../../lib/fake-data';
+  import { $, copy, copyButton, el, row, slip } from '../../lib/ui';
+
+  const out = $('out');
+  const foot = $('foot');
+  let current: FakePerson[] = [];
+
+  const asText = (p: FakePerson) => FAKE_FIELDS.map((f) => `${f.label}：${p[f.key]}`).join('\n');
+
+  function generate() {
+    const n = Number($<HTMLInputElement>('count').value);
+    current = generatePeople(n);
+    out.replaceChildren(
+      ...current.map((p, i) => {
+        const s = slip(`測試資料 ${i + 1}`);
+        const rows = el('dl', 'slip__rows');
+        for (const f of FAKE_FIELDS) rows.append(row(f.label, p[f.key]));
+        s.append(rows);
+        const actions = el('div', 'slip__actions');
+        actions.append(copyButton('複製這一筆', () => asText(p)));
+        s.append(actions);
+        return s;
+      }),
+    );
+    foot.hidden = false;
+  }
+
+  $('gen-btn').addEventListener('click', generate);
+  $('copy-all').addEventListener('click', () => copy(current.map(asText).join('\n\n')));
+</script>

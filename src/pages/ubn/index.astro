@@ -1,14 +1,13 @@
 ---
 import Base from '../../layouts/Base.astro';
+import ToolHead from '../../components/ToolHead.astro';
+import Toast from '../../components/Toast.astro';
+import { TOOLS } from '../../config/site';
+
+const t = TOOLS.find((x) => x.slug === 'ubn')!;
 ---
-<Base
-  title="統一編號驗證與生成"
-  description="台灣統一編號（統編）驗證與生成工具：輸入 8 碼立即檢查是否符合規則並說明原因，也能產生測試用統編。資料只在瀏覽器處理。"
-  path="/ubn/"
->
-  <p class="crumb"><a href="/">首頁</a> › 統一編號</p>
-  <h1 class="page-title">統一編號驗證與生成</h1>
-  <p class="page-sub">驗證 8 碼統一編號是否正確，或產生測試用統編。</p>
+<Base title={t.seoTitle} description={t.seoDescription} path="/ubn/">
+  <ToolHead crumb="統一編號" title="統一編號驗證與生成" sub="驗證 8 碼統一編號是否正確，或產生測試用統編。" />
 
   <div class="tabs" role="tablist" aria-label="功能">
     <button class="tab" role="tab" id="tab-verify" aria-controls="panel-verify" aria-selected="true">驗證</button>
@@ -42,83 +41,30 @@ import Base from '../../layouts/Base.astro';
       <button class="btn btn--ghost" id="copy-all" type="button">全部複製</button>
     </div>
   </section>
-  <div class="toast" id="toast" role="status" hidden>已複製</div>
+  <Toast />
 </Base>
 
 <script>
   import { FAILURE_MESSAGE, generateUbns, validateUbn } from '../../lib/ubn';
+  import { $, copy, copyButton, el, initTabs, row, slip } from '../../lib/ui';
 
-  const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
+  initTabs(['verify', 'gen']);
 
-  // 分頁
-  const tabs = [$('tab-verify'), $('tab-gen')];
-  const panels = [$('panel-verify'), $('panel-gen')];
-  function selectTab(i: number) {
-    tabs.forEach((t, j) => {
-      t.setAttribute('aria-selected', String(i === j));
-      t.tabIndex = i === j ? 0 : -1;
-      panels[j]!.hidden = i !== j;
-    });
-  }
-  tabs.forEach((t, i) => {
-    t.addEventListener('click', () => selectTab(i));
-    t.addEventListener('keydown', (e) => {
-      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
-        const n = (i + 1) % tabs.length;
-        selectTab(n);
-        tabs[n]!.focus();
-      }
-    });
-  });
-
-  // 複製
-  let toastTimer: number | undefined;
-  async function copy(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const ta = document.createElement('textarea');
-      ta.value = text;
-      document.body.append(ta);
-      ta.select();
-      document.execCommand('copy');
-      ta.remove();
-    }
-    const toast = $('toast');
-    toast.hidden = false;
-    clearTimeout(toastTimer);
-    toastTimer = window.setTimeout(() => (toast.hidden = true), 1600);
-  }
-
-  function el(tag: string, cls?: string, text?: string) {
-    const e = document.createElement(tag);
-    if (cls) e.className = cls;
-    if (text !== undefined) e.textContent = text;
-    return e;
-  }
-  function row(dt: string, dd: string) {
-    const r = el('div', 'slip__row');
-    r.append(el('dt', undefined, dt), el('dd', undefined, dd));
-    return r;
-  }
-
-  // 驗證
   const input = $<HTMLInputElement>('ubn');
   const slot = $('slot');
 
   function render() {
     const r = validateUbn(input.value);
-    const slip = el('div', r.ok ? 'slip' : 'slip slip--fail');
-    slip.append(el('p', 'slip__title', '驗證證明聯'), el('hr'));
-    slip.append(el('p', 'slip__code', r.normalized || '--------'), el('hr'));
+    const s = slip('驗證證明聯', !r.ok);
+    s.append(el('p', 'slip__code', r.normalized || '--------'), el('hr'));
 
     const rows = el('dl', 'slip__rows');
     rows.append(row('檢查規則', '加權檢查'), row('位數', String(r.normalized.length)));
     if (r.sum !== undefined) rows.append(row('加權總和', String(r.sum)));
-    slip.append(rows, el('hr'));
+    s.append(rows, el('hr'));
 
-    slip.append(el('p', 'slip__verdict', r.ok ? '格式正確' : '不通過'));
-    if (!r.ok && r.failure) slip.append(el('p', 'slip__reason', FAILURE_MESSAGE[r.failure]));
+    s.append(el('p', 'slip__verdict', r.ok ? '格式正確' : '不通過'));
+    if (!r.ok && r.failure) s.append(el('p', 'slip__reason', FAILURE_MESSAGE[r.failure]));
 
     if (r.steps) {
       const d = el('details');
@@ -127,42 +73,35 @@ import Base from '../../layouts/Base.astro';
       const head = el('tr');
       for (const h of ['位', '數字', '權重', '積的位數和']) head.append(el('th', undefined, h));
       t.append(head);
-      r.steps.forEach((s, i) => {
+      r.steps.forEach((st, i) => {
         const tr = el('tr');
-        for (const v of [i + 1, s.digit, s.weight, s.value]) tr.append(el('td', undefined, String(v)));
+        for (const v of [i + 1, st.digit, st.weight, st.value]) tr.append(el('td', undefined, String(v)));
         t.append(tr);
       });
       d.append(t);
-      slip.append(d);
+      s.append(d);
     }
 
-    if (r.ok) slip.append(el('p', 'slip__note', '格式正確不代表公司真實存在，也不是查核公司登記。'));
+    if (r.ok) s.append(el('p', 'slip__note', '格式正確不代表公司真實存在，也不是查核公司登記。'));
 
     const actions = el('div', 'slip__actions');
-    const btn = el('button', 'btn btn--ghost', '複製結果') as HTMLButtonElement;
-    btn.type = 'button';
-    btn.addEventListener('click', () =>
-      copy(`統一編號 ${r.normalized}:${r.ok ? '格式正確' : '不通過（' + FAILURE_MESSAGE[r.failure!] + '）'}`),
+    actions.append(
+      copyButton('複製結果', () => `統一編號 ${r.normalized}：${r.ok ? '格式正確' : '不通過（' + FAILURE_MESSAGE[r.failure!] + '）'}`),
     );
-    actions.append(btn);
-    slip.append(actions);
-    slot.replaceChildren(slip);
+    s.append(actions);
+    slot.replaceChildren(s);
   }
 
   $('verify-form').addEventListener('submit', (e) => {
     e.preventDefault();
-    if (input.value.trim() === '') {
-      slot.replaceChildren(el('p', 'slip-empty', FAILURE_MESSAGE.empty));
-      return;
-    }
-    render();
+    if (input.value.trim() === '') slot.replaceChildren(el('p', 'slip-empty', FAILURE_MESSAGE.empty));
+    else render();
   });
   // 輸入到第 8 碼時自動驗證，之前不打擾
   input.addEventListener('input', () => {
     if (validateUbn(input.value).normalized.length === 8) render();
   });
 
-  // 生成
   const list = $('gen-list');
   const foot = $('gen-foot');
   let current: string[] = [];
@@ -171,12 +110,7 @@ import Base from '../../layouts/Base.astro';
     list.replaceChildren(
       ...current.map((code) => {
         const li = el('li');
-        li.append(el('span', 'num', code));
-        const b = el('button', 'btn btn--ghost', '複製') as HTMLButtonElement;
-        b.type = 'button';
-        b.setAttribute('aria-label', `複製 ${code}`);
-        b.addEventListener('click', () => copy(code));
-        li.append(b);
+        li.append(el('span', 'num', code), copyButton('複製', () => code, `複製 ${code}`));
         return li;
       }),
     );
