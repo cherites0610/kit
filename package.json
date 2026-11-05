@@ -1,14 +1,14 @@
 {
-  "name": "init",
-  "version": "1.0.0",
-  "description": "",
-  "main": "index.js",
+  "name": "cherites-kit",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "dev": "astro dev",
+    "build": "astro check && astro build",
+    "preview": "astro preview",
+    "test": "vitest run"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
   "devEngines": {
     "packageManager": {
       "name": "pnpm",
@@ -17,5 +17,13 @@
     }
   },
   "packageManager": "pnpm@12.16.1",
-  "type": "module"
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^7.4.5"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.12",
+    "typescript": "^6.0.3",
+    "vitest": "^5.1.0"
+  }
 }
